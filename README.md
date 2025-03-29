@@ -33,8 +33,4 @@ To authenticate and download models programmatically, you’ll need a personal a
 
 When running inference locally (e.g., loading models with `transformers` or `AutoModelForCausalLM`), you’ll be prompted to enter the token or add it programmatically.
 
-You can:
-- Paste the token in the appropriate cell/block in the script.
-- Or set it as an environment variable:
-  ```bash
-  export HUGGINGFACE_TOKEN=your_token_here
+Enter this token when prompted by the following command: !huggingface-cli login
