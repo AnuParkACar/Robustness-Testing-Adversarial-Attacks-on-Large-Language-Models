@@ -22,13 +22,14 @@ University of Alberta \\
 }
 
 
-
 \begin{document}
 
 \maketitle
 
 \begin{abstract}
+The vulnerability of large language models (LLMs) to adversarial input is a growing concern as these models are used in more and more high-stakes applications.  In this study, we examine the robustness of Mistral-7B by assessing its performance under various adversarial approaches, such as synonym substitutions, character-level noise, and semantic-preserving perturbations produced by TextFooler.  Our results demonstrate notable accuracy decreases, especially on semantically sensitive datasets like MRPC, and include a variety of NLP tasks, including topic classification, paraphrase detection, and sentiment classification.  Additionally, we provide customized defense tactics such input sanitization, adversarial training, and embedding-based robustness mechanisms.  Finally, we suggest future research avenues to help build more robust LLMs, such as multimodal robustness evaluation and adversaries based on reinforcement learning.
 \end{abstract}
+
 
 \section{Motivation}
 
@@ -70,7 +71,41 @@ Subsequently, the LLM evaluation phase entailed prompting Mistral-7B with the pe
 
 \section{Discussion}
 
+This section outlines the logical next steps in response to our findings, including proposed defense mechanisms to enhance LLM robustness and suggestions for future research to strengthen adversarial resistance.
+
+\subsection{Proposed Defense Mechanisms}
+
+We outline three key defense mechanisms as natural and comprehensive defenses to the implemented attacks: \textbf{Adversarial Training}, \textbf{Input Preprocessing}, and \textbf{Embedding-Based Semantic Defense}.
+
+\paragraph{Adversarial Training}
+Adversarial training serves as a key defense for ensuring and increasing robustness against adversarial attacks. This is achieved by augmenting training data with perturbed samples. By integrating adversarial data generated from attacks such as \texttt{CharSwapAug} and \texttt{WordSwapWordNet}, the model’s training pipeline can be enhanced to improve generalization to adversarial inputs. Prior work by Jia and Liang \cite{jia2017adversarial} demonstrates the effectiveness of adversarial training in improving robustness, particularly for reading comprehension systems. We recommend incorporating paraphrase-based and synonym-substitution adversarial examples during fine-tuning to generate a more diverse and effective adversarial training set.
+
+\paragraph{Input Preprocessing and Sanitization}
+Input sanitization provides an alternative and complementary strategy, wherein adversarial noise is filtered prior to inference. This can involve the use of noise detection and removal algorithms, including text normalization techniques such as robust spell-checking, typo correction, and anomaly detection. These methods have been shown to improve model performance under attack \cite{omar2022robust}, particularly for character-level perturbations like those introduced by \texttt{CharSwapAug}. In the context of our work, the integration of preprocessing pipelines stands to significantly bolster LLM resilience.
+
+\paragraph{Embedding-Based Semantic Defense}
+Another promising approach for maintaining robustness involves preserving the semantic integrity of model embeddings in the presence of surface-level perturbations. As outlined by Huang and Chen \cite{huang2024semantic}, embedding-based semantic defense adjusts word embeddings using semantic associative fields, aligning them with the original context to suppress adversarial influence. This technique can be integrated into the model’s pipeline to protect against both word-level and character-level perturbations without altering the overall input semantics.
+
+\subsection{Future Directions}
+
+This section explores future research directions that build upon the findings of this project.
+
+\paragraph{RL-Based Adaptive Attacks}
+Reinforcement learning (RL)-based adaptive attack strategies have shown significant promise. RL agents can be trained to maximize attack success by dynamically adapting to model responses. Chen et al. \cite{chen2025worstcase} have demonstrated that such agents outperform static, rule-based approaches by discovering perturbation strategies in an online setting. Integration of RL-based perturbation generation presents a natural next step in adversarial evaluation.
+
+\paragraph{Multimodal Robustness Testing}
+Future research should also explore robustness beyond text-based inputs. Multimodal models such as LLaVA and GPT-4V, which process both textual and visual information, are increasingly deployed in real-world applications \cite{wsj2025securityrisks}. These models are susceptible to multimodal adversarial examples such as misleading images or mismatched captions. Building robust benchmarks and evaluation pipelines for such systems is essential to ensure reliability in these complex settings\cite{wsj2025securityrisks}.
+
+\paragraph{Universal Robustness Enhancers}
+Another area of interest lies in universal robustness strategies that aim to enhance model resilience by default. Recent work suggests the use of \textit{gradient-aligned preprocessing} to suppress adversarial noise without sacrificing semantic fidelity \cite{omar2022robust}. When combined with \textit{curriculum-based adversarial training}—wherein models are exposed to progressively difficult adversarial examples—this approach can continuously reinforce model robustness over time. Such strategies represent a long-term path toward inherently robust LLMs.
+
+\bigskip
+Ultimately, a combination of adversarial training, semantic defense techniques, multimodal evaluation, and dynamic adversarial agents can lead to a more trustworthy and secure deployment of LLMs in real-world settings.
+
 \section{Conclusion}
+
+Our work sought to test LLM robustness against a plethora of adversarial attacks, ultimately resulting in the implementation of attacks which caused meaningful degradation of LLM performance, with semantic tasks (MRPC) being most impacted. Specifically, character-level attacks and TextAttack augmentation implemented, WordNet attacks being evenly effective across the board, with proving to be TextFooler highly effective across all tasks/datasets. Subsequently, we presented tailored defense strategies for further reinforcing model robustness, and provided future directions, e.g., RL-based attacks, multimodal extensions, for consideration.
+
 
 \section*{Author Contributions}
 
@@ -78,7 +113,8 @@ All authors contributed equally to the project. Below is a summary of individual
 
 \begin{itemize}
     \item \textbf{Anmol Devgun}: 
-    \item \textbf{Anu Parbhakar}: 
+    \item \textbf{Anu Parbhakar}: Conducted the initial literature review on adversarial attack strategies, selected and implemented the target model for evaluation, and developed all baseline experiment scripts. Led the implementation of the TextFooler attack and corresponding experimental setup. Authored the Abstract, TextFooler subsection of the Approach, Implementation Design, Discussion, and Conclusion sections of the paper, as well as contributed to the presentation materials.
+ 
     \item \textbf{Youssef Ibrahim}: 
     \item \textbf{Yunus Said}: 
 \end{itemize}
