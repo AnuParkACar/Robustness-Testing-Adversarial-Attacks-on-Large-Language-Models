@@ -1,0 +1,90 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+
+\title{Robustness Testing: Adversarial Attacks on Large Language Models}
+
+\author{
+Anmol Devgun\textsuperscript{*}\quad Anu Parbhakar\textsuperscript{*}\quad Youssef Ibrahim\textsuperscript{*}\quad Yunus Said\textsuperscript{*} \\
+Department of Electrical and Computer Engineering \\
+University of Alberta \\
+\texttt{\{devgun,aparbhak,yibrahim,ysaid\}@ualberta.ca} \\
+\textsuperscript{*}All authors contributed equally to this work.
+}
+
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\end{abstract}
+
+\section{Motivation}
+
+
+\section{Approach}
+
+\subsection{TextFooler}
+
+This section delves into the specifics of the implemented TextFooler algorithm, a black-box word-level adversarial attack algorithm for NLP Models \cite{jin2020bertrobust}. Developed by Jin. et al, TextFooler generates perturbed attacks that are semantically similar to the original text, while also maintaining grammatical coherence \cite{jin2020bertrobust}. This is accomplished by identifying high-importance words within the input, followed by subsequent replacement with semantically similar candidates to induce misclassification, while ensuring three main constraints are met: prediction change (missclassification), semantic similarity being higher than a pre-set threshold, and grammatical acceptability \cite{jin2020bertrobust} \cite{textattack2020framework}. Specifically, word importance ranking occurs in the initial stages of the algorithm, utilizing a black-box scoring function to rank the importance of words in a given sentence, with changes in model confidence in the original prediction being a guiding metric. Subsequently, via retrieval of semantically similar words through the usage of counter-fitted embeddings, an iterative substitution occurs, continuing until misclassification occurs as a result of adversarial substitution, or until exhaustion of viable replacements. Essentially, via the application of this attack algorithm on BERT models pre-trained on specific datasets, e.g., IDMB, Jin et. al showcase the efficacy of black-box adversarial attacks \cite{jin2020bertrobust, mrksic2016counterfitting}.
+
+\section{Implementation Design}
+
+This section describes the overall specifics behind the implementation of the experiment.
+
+\subsection{Experiment Environment Setup}
+
+This section provides a high-level overview of the experiment environment and the key packages utilized in its maintenance, along with a description of the design of the baseline scripts. Specifically, all experiments were conducted utilizing the Google Colab environment, with GPU-accelerated CUDA computing utilized for all tests, with the T4 GPU being used for most, and the A100 GPU being utilized for the few, extremely computationally extensive experiments. Moreover, the codebase pertaining to the experiment scripts (e.g., word-level, char-level attacks) was implemented via utilizing the \texttt{TextAttack} library, which provides an API for easy application of pre-defined attack recipes \cite{textattack2020framework}. Further, the openly-available Mistral-7B model was utilized for inferencing, being loaded with quantization to 4-bit precision via \texttt{BitsAndBytesConfig} for faster loading and look-up, with the model being accessed using HuggingFace. Additionally, the \texttt{transformers} and \texttt{datasets} libraries were used for further model/dataset loading, with \texttt{scikit-learn} being used for accuracy, precision, recall, and F1 metrics, and \texttt{sentence\_transformers} and \texttt{Universal Sentence Encoder} packages being employed for semantic similarity evaluation where required \cite{cer2018use}.
+
+\subsection{Baseline Setup}
+
+This section describes the details regarding the datasets throughout the experiment, as well as the baseline pipeline design. There were overall three main datasets used for establishing baseline/control metrics: IMDB (binary sentiment classification), AG News (4-class news topic classification), and MRPC (binary paraphrase detection). Additionally, the SQuAD dataset was further utilized to establish a baseline for a subset of the adversarial attacks performed. Furthermore, preprocessing was implemented to allow for the usage of these datasets in conjunction with the generative nature of LLMs, with classification tasks having each sample be prompted to the model as a natural language question (e.g., ``Is this review positive or negative?''). Moreover, model output was post-processed by searching for class-specific keywords in the response to map them back to discrete class labels (e.g., ``positive'', ``negative''). Additionally, for functional replication and computational feasibility, input samples were restricted to around 1000 samples per dataset. Essentially, the baseline pipeline consisted of model inference over unperturbed samples from each dataset, with the generated model output undergoing normalization for effective classification, to serve as the baseline/control for comparison.
+
+\subsection{Attack Implementations}
+
+This section outlines the specifics regarding the implementations of the various attack strategies.
+
+\paragraph{CharSwapAugmenter}
+The \texttt{CharSwapAugmenter} attack (a character-level attack) was implemented by employing the \texttt{CharSwapAugmenter} class, provided by the TextAttack augmentation API \cite{textattack2020framework}. The attacks consisted of a combination of swaps (transposing two adjacent characters), insertions (adding a random character), deletions (removing a character), and substitutions (replacing a character randomly). These transformations were constrained by a word swap limit parameter, with a maximum of 20\% of all tokens in a given sentence being augmented, with only one transformation per example being applied to minimize unnatural distortions. These transformations occurred prior to prompting, in order to enable apt comparisons with baseline classification accuracy scores. This attack’s implementation featured a lightweight and swift application process, showcasing particular effectiveness on brittle token-sensitive classifiers.
+
+\paragraph{WordSwapWordNet}
+Similarly, the \texttt{WordSwapWordNet} adversarial attack (a word-level attack) was implemented via the TextAttack augmentation API \cite{textattack2020framework}, featuring top-1000 samples based on text length from each dataset to alleviate the computational overhead of perturbing text. Additionally, similar to \texttt{CharSwapAugmenter}, \texttt{WordSwapWordNet} featured transformation constraints subject to a maximum percentage of total tokens over which the transformations could be applied, prior to prompting. Specifically, one token from each input sentence underwent transformation via replacement with the closest corresponding WordNet synonym token, with POS tags being utilized to maintain grammaticality. Ultimately, the \texttt{WordSwapWordNet} attack resulted in a fast augmentation process, producing simpler, yet semantically weaker perturbations, while retaining high fluency.
+
+\paragraph{TextFooler}
+Lastly, the \texttt{TextFooler} (a word-level adversarial attack) implementation was split into two parts, owing to the incompatibility of \texttt{TextFooler} with the generative nature of LLMs. The first stage, which featured the adversarial example generation, involved the \texttt{TextFoolerJin2019} attack recipe provided by the TextAttack API \cite{textattack2020framework} to perform the iterative attack on pre-trained BERT models. Each dataset was augmented on its corresponding pre-trained BERT model, thus allowing for the generation of adversarial examples for input into the next stage of the implementation pipeline \cite{jin2020bertrobust}.
+
+Subsequently, the LLM evaluation phase entailed prompting Mistral-7B with the perturbed text samples generated from the previous stage, with predicted outputs being converted to labels for accuracy evaluation, and the perturbed datasets being saved for reproducibility. In terms of performance, due to the computationally expensive nature of applying the attack algorithm on the BERT models, an A100 GPU was utilized to ensure completion of experiments in a reasonable period of time. This added computation power allowed for acceleration in sample generation time from approximately 1 minute per sample to 2.5 seconds per sample, indicating a drastic improvement. Overall, the hybrid approach of utilizing pre-trained models to generate adversarial data via attack algorithms, which are traditionally ill-suited for direct employment with LLMs, allowed for the effective testing of the robustness of the LLMs, as further detailed in the Evaluation section.
+
+\section{Evaluation}
+
+\section{Discussion}
+
+\section{Conclusion}
+
+\section*{Author Contributions}
+
+All authors contributed equally to the project. Below is a summary of individual roles:
+
+\begin{itemize}
+    \item \textbf{Anmol Devgun}: 
+    \item \textbf{Anu Parbhakar}: 
+    \item \textbf{Youssef Ibrahim}: 
+    \item \textbf{Yunus Said}: 
+\end{itemize}
+
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
