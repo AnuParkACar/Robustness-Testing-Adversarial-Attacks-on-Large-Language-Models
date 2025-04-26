@@ -67,7 +67,92 @@ Lastly, the \texttt{TextFooler} (a word-level adversarial attack) implementation
 
 Subsequently, the LLM evaluation phase entailed prompting Mistral-7B with the perturbed text samples generated from the previous stage, with predicted outputs being converted to labels for accuracy evaluation, and the perturbed datasets being saved for reproducibility. In terms of performance, due to the computationally expensive nature of applying the attack algorithm on the BERT models, an A100 GPU was utilized to ensure completion of experiments in a reasonable period of time. This added computation power allowed for acceleration in sample generation time from approximately 1 minute per sample to 2.5 seconds per sample, indicating a drastic improvement. Overall, the hybrid approach of utilizing pre-trained models to generate adversarial data via attack algorithms, which are traditionally ill-suited for direct employment with LLMs, allowed for the effective testing of the robustness of the LLMs, as further detailed in the Evaluation section.
 
+
 \section{Evaluation}
+
+This section presents the evaluation of the Mistral-7B-Instruct-v0.1 model's robustness against adversarial attacks across multiple NLP tasks. We assess the model’s performance degradation under CharSwapAugmenter (character-level), WordSwapWordNet (word-level), and TextFooler (semantic-preserving word-level) perturbations. Both quantitative metrics and qualitative observations are provided.
+
+\subsection{Quantitative Results}
+
+
+A comprehensive evaluation took place for Mistral-7B-Instruct-v0.1 across four datasets: IMDB for binary sentiment classification, MRPC for binary paraphrase detection, AG News for multi-class topic classification and SQuAD for question answering. The model obtained baseline performance levels through clean test samples before the attack procedure started. Subsequently, adversarial attacks were applied to each dataset, and model outputs were re-evaluated for classification accuracy or QA metrics (Exact Match [EM] and F1 scores).
+
+\textbf{Accuracy Results}:
+\begin{itemize}
+    \item IMDB: Baseline accuracy was 95.67\%. CharSwapAug dropped performance to 91.75\%, WordNet to 86.91\%, and TextFooler to 89.13\%. IMDB showed strong resilience overall, indicating that polarity-based classification tasks are less sensitive to minor word-level edits.
+    \item MRPC: Baseline accuracy was 57.00\%. CharSwapAug reduced it to 44.70\%, WordNet to 41.80\%, and TextFooler to 30.06\%. MRPC was significantly more fragile, confirming the vulnerability of semantic reasoning tasks.
+    \item AG News: Baseline accuracy was 69.47\%. CharSwapAug and WordNet produced slight drops to 67.35\% and 67.28\% respectively, while TextFooler caused a sharper decline to 61.41\%.
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/accuracy_chart_updated.png}
+    \caption{Accuracy of Mistral-7B-Instruct under Baseline, CharSwapAug, WordNet, and TextFooler attacks across IMDB, MRPC, and AG News datasets.}
+    \label{fig:accuracy}
+\end{figure}
+
+\textbf{SQuAD Results}:
+\begin{itemize}
+    \item F1 Score dropped from 31.11 (baseline) to 29.34 (CharSwapAug) and 28.36 (WordNet). Despite these drops, the model retained reasonable partial answer quality due to token overlap between adversarially perturbed inputs and gold answers.
+    \item EM Score dropped from 1.00 (baseline) to 0.70 (CharSwapAug), but slightly increased to 1.20 (WordNet). This unexpected increase was likely due to coincidental synonym substitutions matching the gold answer by chance, rather than a real robustness gain.
+\end{itemize}
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.65\linewidth]{figures/f1_chart_updated.png}
+    \caption{F1 Scores of Mistral-7B-Instruct on SQuAD under Baseline, CharSwapAug, and WordNet attacks.}
+    \label{fig:f1}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.65\linewidth]{figures/em_chart_updated.png}
+    \caption{Exact Match (EM) Scores of Mistral-7B-Instruct on SQuAD under Baseline, CharSwapAug, and WordNet attacks.}
+    \label{fig:em}
+\end{figure}
+
+Performance degradation was most severe on semantically sensitive tasks such as paraphrase detection (MRPC) and question answering (SQuAD), while sentiment classification (IMDB) and topic classification (AG News) comparatively demonstrated more robustness.
+
+\subsection{Qualitative Results}
+
+To better understand model failures, we manually analyzed 10 adversarial examples from the MRPC dataset.  
+Key findings include:
+\begin{itemize}
+    \item When the model detected grammatical mistakes through swapping words (such as minor grammar or synonym changes) (e.g., ``buy'' $\rightarrow$ ``appear to buy''), the model often flagged grammatical inconsistencies but it failed to recognize the altered semantic meaning.
+    \item Out of 10 adversarial MRPC examples tested, 5 were correctly classified and 5 were misclassified, indicating a 50\% accuracy rate under adversarial conditions.
+    \item Semantic shifts based on WordNet synonym substitutions proved to be strong factors that led the model to produce incorrect predictions while maintaining proper grammar.
+\end{itemize}
+
+
+The research demonstrates Mistral-7B fails to preserve profound semantic consistency under surface-level adversarial perturbations.
+
+\subsection{Analysis}
+
+Task type proves to be a substantial determinant which influences how robust the system functions, according to the analytic findings:
+\begin{itemize}
+    \item Semantic tasks such as paraphrase detection (MRPC) are highly vulnerable to character- and word-level perturbations.
+    \item Sentiment classification (IMDB) remains relatively resilient, because evaluating polarity is not dependent on precise word choices.
+    \item Multi-class topic classification (AG News) experiences moderate, consistent degradation under attack.
+    \item Question answering (SQuAD) shows some resilience in F1 score due to token overlap but remains susceptible under EM evaluation.
+\end{itemize}
+
+Interestingly, while both character-level (CharSwapAug) and word-level (WordNet) attacks caused measurable accuracy drops, TextFooler, a semantically preserving attack, had the greatest impact, especially on MRPC.
+
+Confidence thresholding proved beneficial for preventing errors when under attack since it rejected predictions with low confidence rather than implementing incorrect predictions.
+
+Thus, robustness is not solely a model training issue; it must be addressed holistically through better system design, including input handling and output management strategies.
+
+
+\subsection{Summary}
+
+
+In summary, the evaluation demonstrates that Mistral-7B-Instruct, while effective under clean conditions, remains vulnerable to adversarial attacks, especially in tasks requiring nuanced semantic understanding.  
+Performance drops were most severe on paraphrase detection (MRPC) and question answering (SQuAD), while sentiment analysis and topic classification remained relatively stable.
+
+Simple attacks such as CharSwapAug, WordNet synonym replacement, and TextFooler perturbations continue to pose a real risk to deployed LLMs.  
+Our findings reinforce the need for task-specific evaluation, input sanitization pipelines, adversarial training, and confidence-based abstention mechanisms to build more robust and trustworthy LLM systems.
+
 
 \section{Discussion}
 
@@ -115,7 +200,8 @@ All authors contributed equally to the project. Below is a summary of individual
     \item \textbf{Anmol Devgun}: 
     \item \textbf{Anu Parbhakar}: Conducted the initial literature review on adversarial attack strategies, selected and implemented the target model for evaluation, and developed all baseline experiment scripts. Led the implementation of the TextFooler attack and corresponding experimental setup. Authored the Abstract, TextFooler subsection of the Approach, Implementation Design, Discussion, and Conclusion sections of the paper, as well as contributed to the presentation materials.
  
-    \item \textbf{Youssef Ibrahim}: 
+    \item \textbf{Youssef Ibrahim}: Responsible for analyzing the model’s performance degradation under adversarial attacks across datasets such as SQuAD, IMDB, MRPC, and AG News. Designed and implemented the accuracy, F1, and EM score visualizations comparing baseline and adversarial conditions (CharSwapAug, WordNet, TextFooler). Conducted in-depth performance analysis across datasets, identifying task-specific vulnerabilities and explaining real-world robustness implications. Briefly proposed defense strategies including adversarial training and semantic consistency checks. Authored the Evaluation section for this paper and the presentation.
+
     \item \textbf{Yunus Said}: 
 \end{itemize}
 
