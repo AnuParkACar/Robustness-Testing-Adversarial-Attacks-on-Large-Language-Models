@@ -34,6 +34,45 @@ The vulnerability of large language models (LLMs) to adversarial input is a grow
 \section{Motivation}
 
 
+\subsection{Background and Problem Statement}
+
+In recent years, the rapid advancement of large language models (LLMs) has led to their widespread adoption across a variety of applications, including customer service, content generation, question answering, and automated decision-making systems. Despite their impressive performance on standard benchmarks, these models remain vulnerable to adversarial attacks—small, often imperceptible modifications to input data that can drastically alter a model's output. Such vulnerabilities pose serious challenges to the reliability and trustworthiness of LLMs, especially when deployed in high-stakes environments such as healthcare, finance, and legal systems.
+
+\subsection{Importance of Robustness in Trustworthy Machine Learning}
+
+The importance of evaluating and improving the robustness of LLMs has become a central concern in the field of \textit{trustworthy machine learning}. Robustness, in this context, refers to a model's ability to maintain consistent and accurate performance in the presence of adversarial or noisy inputs. If left unchecked, adversarial weaknesses can lead to misinformation, manipulation, and compromised user trust. For example, a sentiment analysis system could misclassify a review due to a single character typo, or a question answering model could produce an incorrect answer if key terms are synonymized or paraphrased. Addressing these concerns is crucial for ensuring that LLMs can be safely and reliably deployed in real-world scenarios.
+
+\subsection{ Motivation for Choosing Mistral-7B-Instruct-v0.1}
+
+In this project, we systematically evaluate the \textbf{adversarial robustness} of \textbf{Mistral-7B-Instruct-v0.1}, a state-of-the-art open-weight LLM released by Mistral AI. Mistral-7B stands out as a compelling model for this study due to its strong performance across a wide range of natural language processing (NLP) tasks, despite its relatively compact size. It strikes a practical balance between computational efficiency and task accuracy, making it a popular candidate for integration into real-world systems. Furthermore, its open-source availability makes it a transparent and adaptable testbed for evaluating robustness to adversarial perturbations.
+
+\subsection{Dataset Selection and Evaluation Strategy}
+
+To comprehensively assess Mistral-7B's resilience to attacks, we evaluated its performance on four representative NLP datasets:
+\begin{itemize}
+    \item \textbf{SQuAD} (Stanford Question Answering Dataset), for extractive question answering,
+    \item \textbf{IMDB}, for binary sentiment classification,
+    \item \textbf{MRPC} (Microsoft Research Paraphrase Corpus), for paraphrase detection, and
+    \item \textbf{AG News}, for topic-based news categorization.
+\end{itemize}
+These datasets cover a diverse range of tasks and linguistic structures, allowing us to evaluate the model's behavior across multiple domains.
+
+\subsection{Adversarial Attack Techniques}
+
+We first established \textit{baseline accuracies} on clean, unperturbed inputs and then applied three distinct adversarial attack strategies:
+\begin{itemize}
+    \item \textbf{CharSwapAug}, which introduces subtle character-level typos,
+    \item \textbf{WordNet}, which replaces words with synonyms using semantic relations, and
+    \item \textbf{TextFooler}, a powerful attack that swaps out words while preserving the overall meaning of the sentence.
+\end{itemize}
+These attacks were chosen to simulate both accidental and intentional perturbations that might occur in real-world settings, such as typographical errors, paraphrasing, or targeted manipulation.
+
+\subsection{Broader Impact and Goal of the Study}
+
+By observing how Mistral-7B’s performance degrades under these conditions, we aim to better understand its robustness profile and provide insights into potential weaknesses and areas for improvement. Ultimately, this project contributes to the growing body of work on evaluating and improving the robustness of language models. Our findings highlight the current limitations of strong models like Mistral-7B and emphasize the need for more robust evaluation pipelines that go beyond clean accuracy metrics. Ensuring the reliability of LLMs under adversarial conditions is essential for developing AI systems that can be trusted in real-world use cases.
+
+
+
 \section{Approach}
 
 \subsection{High-Level Overview}
@@ -223,7 +262,8 @@ Our work sought to test LLM robustness against a plethora of adversarial attacks
 All authors contributed equally to the project. Below is a summary of individual roles:
 
 \begin{itemize}
-    \item \textbf{Anmol Devgun}: 
+    \item \textbf{Anmol Devgun}: Conducted a review of the literature to guide the design of the experimental methodology to assess adversarial robustness. Performed a baseline evaluation, along with the adversarial attacks of CharSwapAug and WordNet, on the MRPC dataset using Mistral-7B-Instruct-v0.1. These experiments measured the impact of adversarial perturbations on model performance and contributed to the overall analysis of Mistral-7B's robustness. Authored the motivation section of the research paper and the presentation.
+    
     \item \textbf{Anu Parbhakar}: Conducted the initial literature review on adversarial attack strategies, selected and implemented the target model for evaluation, and developed all baseline experiment scripts. Led the implementation of the TextFooler attack and corresponding experimental setup. Authored the Abstract, TextFooler subsection of the Approach, Implementation Design, Discussion, and Conclusion sections of the paper, as well as contributed to the presentation materials.
  
     \item \textbf{Youssef Ibrahim}: Responsible for analyzing the model’s performance degradation under adversarial attacks across datasets such as SQuAD, IMDB, MRPC, and AG News. Designed and implemented the accuracy, F1, and EM score visualizations comparing baseline and adversarial conditions (CharSwapAug, WordNet, TextFooler). Conducted in-depth performance analysis across datasets, identifying task-specific vulnerabilities and explaining real-world robustness implications. Briefly proposed defense strategies including adversarial training and semantic consistency checks. Authored the Evaluation section for this paper and the presentation.
